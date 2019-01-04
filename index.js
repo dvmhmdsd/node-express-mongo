@@ -5,6 +5,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const router = require('./routing/router');
 
 mongoose.connect('mongodb://localhost/nodedb', { useNewUrlParser: true });
 
@@ -29,9 +30,11 @@ const app = express();
 //select a specific view engine
 app.set('view engine', 'pug');
 
+app.use(router);
 
 // get the article module
 let Article = require('./models/model');
+
 // home route
 app.get('/', (req, res) => {
 
@@ -45,12 +48,6 @@ app.get('/', (req, res) => {
 
     //res.send('hello');
     
-});
-
-app.get('/articles', (req, res) => {
-    res.render('add_article', {
-        title: 'articles'
-    });
 });
 
 // use body parser and write its middleware
@@ -91,78 +88,6 @@ app.use(expressValidator({
       };
     }
 }));
-
-app.post('/articles', (req, res) => {
-    req.checkBody('title', 'title is required').notEmpty();
-    req.checkBody('body', 'body is required').notEmpty();
-
-    let errors = req.validationErrors();
-
-    if (errors) {
-        res.render('add_article', {
-            title: 'Articles',
-             errors: errors
-        })
-    }
-
-
-    let articles = new Article();
-    articles.title = req.body.title;
-    articles.body = req.body.body;
-
-    articles.save().then(() => {
-        res.redirect('/');
-    }).catch(err => {
-        console.log(err);
-    })
-    return;
-});
-
-// show a specific article
-app.get('/articles/:id', (req, res) => {
-    Article.findById(req.params.id, (err, article) => {
-        res.render('article', {
-            article: article
-        })
-    })
-});
-
-
-// get the form to update the form
-app.get('/articles/edit/:id', (req, res) => {
-    Article.findById(req.params.id, (err, article) => {
-        res.render('edit_article', {
-            article: article
-        })
-    })
-})
-//edit the article
-app.post('/articles/edit/:id', (req, res) => {
-    let articles = {};
-    articles.title = req.body.title;
-    articles.body = req.body.body;
-
-    let query = {_id: req.params.id};
-
-    Article.update(query, articles).then(() => {
-        
-        res.redirect('/');
-    }).catch(err => {
-        console.log(err);
-    })
-    return;
-});
-
-
-// delete a record 
-app.delete('/articles/:id', (req, res) => {
-    let query = {_id: req.params.id};
-
-    Article.remove(query, err => {
-        if(err) console.log(err);
-    });
-    res.send('success');
-})
 
 app.listen(3000, () => {
     console.log('you are running the app on port: 3000 ...');
