@@ -6,6 +6,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const router = require('./routing/router');
+const router2 = require('./routing/userRouting');
+
 
 mongoose.connect('mongodb://localhost/nodedb', { useNewUrlParser: true });
 
@@ -31,7 +33,7 @@ const app = express();
 app.set('view engine', 'pug');
 
 app.use(router);
-
+app.use('/users', router2);
 // get the article module
 let Article = require('./models/model');
 
