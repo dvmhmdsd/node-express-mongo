@@ -55,6 +55,9 @@ app.get('/articles', (req, res) => {
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
+// load static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.post('/articles', (req, res) => {
     let articles = new Article();
     articles.title = req.body.title;
@@ -67,7 +70,42 @@ app.post('/articles', (req, res) => {
         console.log(err);
     })
     return;
+});
+
+// show a specific article
+app.get('/articles/:id', (req, res) => {
+    Article.findById(req.params.id, (err, article) => {
+        res.render('article', {
+            article: article
+        })
+    })
+});
+
+
+// get the form to update the form
+app.get('/articles/edit/:id', (req, res) => {
+    Article.findById(req.params.id, (err, article) => {
+        res.render('edit_article', {
+            article: article
+        })
+    })
 })
+//edit the article
+app.post('/articles/edit/:id', (req, res) => {
+    let articles = {};
+    articles.title = req.body.title;
+    articles.body = req.body.body;
+
+    let query = {_id: req.params.id};
+
+    Article.update(query, articles).then(() => {
+        
+        res.redirect('/');
+    }).catch(err => {
+        console.log(err);
+    })
+    return;
+});
 
 app.listen(3000, () => {
     console.log('you are running the app on port: 3000 ...');
