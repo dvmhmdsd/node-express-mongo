@@ -1,4 +1,6 @@
-
+const expressValidator = require('express-validator');
+const flash = require('connect-flash');
+const session = require('express-session');
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -58,13 +60,57 @@ app.use(bodyParser.json());
 // load static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// use express session middleware
+app.use(session({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true
+}));
+
+// use express messages middleware
+app.use(require('connect-flash')());
+app.use((req, res, next) => {
+    res.locals.messages = require('express-messages')(req, res);
+    next();
+});
+
+// use express validator middleware
+app.use(expressValidator({
+    errorFormatter: function(param, msg, value) {
+        var namespace = param.split('.')
+        , root    = namespace.shift()
+        , formParam = root;
+  
+      while(namespace.length) {
+        formParam += '[' + namespace.shift() + ']';
+      }
+      return {
+        param : formParam,
+        msg   : msg,
+        value : value
+      };
+    }
+}));
+
 app.post('/articles', (req, res) => {
+    req.checkBody('title', 'title is required').notEmpty();
+    req.checkBody('body', 'body is required').notEmpty();
+
+    let errors = req.validationErrors();
+
+    if (errors) {
+        res.render('add_article', {
+            title: 'Articles',
+             errors: errors
+        })
+    }
+
+
     let articles = new Article();
     articles.title = req.body.title;
     articles.body = req.body.body;
 
     articles.save().then(() => {
-        
         res.redirect('/');
     }).catch(err => {
         console.log(err);

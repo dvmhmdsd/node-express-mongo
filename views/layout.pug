@@ -21,6 +21,9 @@ html(lang="en")
                     
 
         .container
+            if errors
+                each error, i in errors
+                    .alert.alert-danger #{error.msg}
             block content
 
             hr
