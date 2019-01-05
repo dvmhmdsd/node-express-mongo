@@ -1,14 +1,15 @@
-const expressValidator = require('express-validator');
-const flash = require('connect-flash');
-const session = require('express-session');
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const expressValidator = require('express-validator');
+const flash = require('connect-flash');
+const session = require('express-session');
 const router = require('./routing/router');
 const router2 = require('./routing/userRouting');
+const passport = require('passport');
 
-
+// connect to the db
 mongoose.connect('mongodb://localhost/nodedb', { useNewUrlParser: true });
 
 let db = mongoose.connection;
@@ -26,38 +27,25 @@ db.on('error', err => {
 
 const app = express();
 
+// bring model
+let Article = require('./models/model');
+
+
 //set the view engine dir but it's by default 'views'
-//app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'views'));
 
 //select a specific view engine
 app.set('view engine', 'pug');
 
-app.use(router);
-app.use('/users', router2);
-// get the article module
-let Article = require('./models/model');
-
-// home route
-app.get('/', (req, res) => {
-
-    Article.find({}, (err, articles) => {
-        if(err) throw err;
-        res.render('index', {
-            title: 'homes',
-            articles: articles
-        });
-    })
-
-    //res.send('hello');
-    
-});
 
 // use body parser and write its middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
+
 // load static files
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // use express session middleware
 app.use(session({
@@ -79,17 +67,54 @@ app.use(expressValidator({
         var namespace = param.split('.')
         , root    = namespace.shift()
         , formParam = root;
-  
-      while(namespace.length) {
-        formParam += '[' + namespace.shift() + ']';
-      }
-      return {
-        param : formParam,
-        msg   : msg,
-        value : value
-      };
+        
+        while(namespace.length) {
+            formParam += '[' + namespace.shift() + ']';
+        }
+        return {
+            param : formParam,
+            msg   : msg,
+            value : value
+        };
     }
 }));
+
+
+require('./config/passport')(passport);
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('*', (req, res, next) => {
+    res.locals.user = req.user || null;
+    next();
+});
+
+
+// home route
+app.get('/', (req, res) => {
+
+    Article.find({}, (err, articles) => {
+        if(err) console.log(err);
+        res.render('index', {
+            title: 'homes',
+            articles: articles
+        });
+    })
+
+    //res.send('hello');
+    
+});
+
+/* 
+// Route Files
+let articles = require('./routing/router');
+let users = require('./routing/userRouting'); */
+app.use('/articles', router);
+app.use('/users', router2);
+
+
+
 
 app.listen(3000, () => {
     console.log('you are running the app on port: 3000 ...');
