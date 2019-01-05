@@ -114,8 +114,8 @@ app.use('/articles', router);
 app.use('/users', router2);
 
 
+let port = process.env.PORT || 3000;
 
-
-app.listen(3000, () => {
+app.listen(port, () => {
     console.log('you are running the app on port: 3000 ...');
 });
