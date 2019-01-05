@@ -5,6 +5,11 @@ const router = express.Router();
 
 // get the article module
 let Article = require('../models/model');
+
+
+// get the article module
+let User = require('../models/users');
+
 /* 
 const validator = require('express-validator');
 router.use(validator());
@@ -12,7 +17,7 @@ router.use(validator());
 router.use(bodyParser.urlencoded({extended: true}));
 router.use(bodyParser.json()); */
 
-router.get('/add', (req, res) => {
+router.get('/add',  ensureAuth, (req, res) => {
     res.render('add_article', {
         title: 'add_articles'
     });
@@ -34,8 +39,9 @@ router.post('/add', (req, res) => {
 
     let articles = new Article();
     articles.title = req.body.title;
+    articles.author = req.user._id;
     articles.body = req.body.body;
-
+    
     articles.save().then(() => {
         req.flash('success', 'article added');
         res.redirect('/');
@@ -49,16 +55,24 @@ router.post('/add', (req, res) => {
 // show a specific article
 router.get('/:id', (req, res) => {
     Article.findById(req.params.id, (err, article) => {
-        res.render('article', {
-            article: article
+        User.findById(article.author, (err, user) => {
+            res.render('article', {
+                article: article,
+                author: user.name
+            })
         })
     })
 });
 
 
 // get the form to update the form
-router.get('/edit/:id', (req, res) => {
+router.get('/edit/:id', ensureAuth, (req, res) => {
     Article.findById(req.params.id, (err, article) => {
+        if(article.author != req.user._id) {
+            req.flash('danger', 'unauthorized');
+            res.redirect('/');
+            return;
+        }
         res.render('edit_article', {
             article: article
         })
@@ -86,11 +100,21 @@ router.post('/edit/:id', (req, res) => {
 // delete a record 
 router.delete('/:id', (req, res) => {
     let query = {_id: req.params.id};
-
+    
     Article.remove(query, err => {
         if(err) console.log(err);
     });
     res.send('success');
-})
+});
+
+
+function ensureAuth(req, res, next) {
+    if(req.isAuthenticated()) {
+        next();
+    } else {
+        req.flash('danger', 'login first');
+        res.redirect('/users/login');
+    }
+}
 
 module.exports = router;

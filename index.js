@@ -97,7 +97,7 @@ app.get('/', (req, res) => {
     Article.find({}, (err, articles) => {
         if(err) console.log(err);
         res.render('index', {
-            title: 'homes',
+            title: 'Articles',
             articles: articles
         });
     })

@@ -7,4 +7,6 @@ block content
             each article, i in articles
                 li.list-group-item
                     a(href='/articles/'+article._id)= article.title 
-                    a.btn.btn-danger.float-right#delete(href='', data-id= article._id) Delete
+                    if user
+                        if user.id == article.author
+                            a.btn.btn-danger.float-right#delete(href='', data-id= article._id) Delete
