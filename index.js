@@ -12,7 +12,7 @@ const passport = require('passport');
 if (process.env.NODE_ENV !== 'production') { require('dotenv').config() }
 
 // connect to the db
-mongoose.connect('mongodb://localhost/nodedb', { useNewUrlParser: true });
+mongoose.connect('mongodb://article:art1234@ds121535.mlab.com:21535/articles', { useNewUrlParser: true });
 
 let db = mongoose.connection;
 
