@@ -9,6 +9,8 @@ const router = require('./routing/router');
 const router2 = require('./routing/userRouting');
 const passport = require('passport');
 
+if (process.env.NODE_ENV !== 'production') { require('dotenv').config() }
+
 // connect to the db
 mongoose.connect('mongodb://localhost/nodedb', { useNewUrlParser: true });
 
